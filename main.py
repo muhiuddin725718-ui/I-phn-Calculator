@@ -1,4 +1,3 @@
-import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -6,35 +5,111 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.core.window import Window
 
-# উইন্ডো সাইজ সেটআপ (মোবাইল ভিউ)
+# আইফোনের অনুপাতের স্ক্রিন সাইজ সেট করা
 Window.size = (360, 640)
 
-class CalculatorApp(App):
+class IphoneCalculatorApp(App):
     def build(self):
-        self.icon = ''
         self.title = 'iPhone Calculator'
-        self.operators = ["/", "*", "+", "-"]
-        self.last_was_operator = False
-        self.last_button = None
         
-        # প্রধান লেআউট (ভার্টিক্যাল)
-        main_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        
-        # ব্যাকগ্রাউন্ড কালার কালো সেট করা (iOS Style)
-        Window.clearcolor = (0, 0, 0, 1)
+        # মূল লেআউট (ব্যাকগ্রাউন্ড কালো)
+        main_layout = BoxLayout(orientation='vertical', padding=15, spacing=12)
+        Window.clearcolor = (0, 0, 0, 1) # পিওর ব্ল্যাক
 
-        # ডিসপ্লে লেবেল
+        # ডিসপ্লে বা রেজাল্ট স্ক্রিন
         self.result = Label(
-            text="0",
-            font_size=60,
-            halign="right",
+            text="0", 
+            font_size=65, 
+            halign="right", 
             valign="bottom",
-            size_hint=(1, 0.3),
+            size_hint=(1, 0.35), 
             color=(1, 1, 1, 1)
         )
         self.result.bind(size=self.result.setter('text_size'))
         main_layout.add_widget(self.result)
 
+        # আইফোনের ক্যালকুলেটরের বাটন লেআউট
+        buttons = [
+            ['AC', '+/-', '%', '/'],
+            ['7', '8', '9', '*'],
+            ['4', '5', '6', '-'],
+            ['1', '2', '3', '+'],
+            ['0', '.', '=']
+        ]
+
+        # বাটনগুলোর গ্রিড
+        grid = GridLayout(cols=4, spacing=10, size_hint=(1, 0.65))
+        
+        for row in buttons:
+            for label in row:
+                # আইফোনের কালার স্কিম অনুযায়ী রঙের বিন্যাস
+                if label in ['AC', '+/-', '%']:
+                    bg_color, text_color = (0.65, 0.65, 0.65, 1), (0, 0, 0, 1) # হালকা ছাইরঙা বাটন
+                elif label in ['/', '*', '-', '+', '=']:
+                    bg_color, text_color = (1, 0.58, 0, 1), (1, 1, 1, 1) # আইফোনের বিখ্যাত কমলা রঙ
+                else:
+                    bg_color, text_color = (0.2, 0.2, 0.2, 1), (1, 1, 1, 1) # ডার্ক গ্রে বাটন
+
+                # '0' বাটনটি একটু বড় করার জন্য
+                if label == '0':
+                    button = Button(
+                        text=label, 
+                        background_normal='', 
+                        background_color=bg_color, 
+                        color=text_color, 
+                        font_size=32, 
+                        bold=True, 
+                        size_hint_x=2.1
+                    )
+                else:
+                    button = Button(
+                        text=label, 
+                        background_normal='', 
+                        background_color=bg_color, 
+                        color=text_color, 
+                        font_size=32, 
+                        bold=True
+                    )
+                
+                button.bind(on_press=self.on_button_press)
+                grid.add_widget(button)
+
+        main_layout.add_widget(grid)
+        return main_layout
+
+    def on_button_press(self, instance):
+        current = self.result.text
+        button_text = instance.text
+
+        if button_text == "AC":
+            self.result.text = "0"
+        elif button_text == "+/-":
+            if current.startswith("-"):
+                self.result.text = current[1:]
+            elif current != "0":
+                self.result.text = "-" + current
+        elif button_text == "%":
+            try:
+                self.result.text = str(float(current) / 100)
+            except:
+                self.result.text = "Error"
+        elif button_text == "=":
+            try:
+                # পাইথনের হিসাব নিকাশ
+                solution = str(eval(current.replace('x', '*').replace('÷', '/')))
+                if solution.endswith('.0'):
+                    solution = solution[:-2]
+                self.result.text = solution
+            except:
+                self.result.text = "Error"
+        else:
+            if current == "0" or current == "Error":
+                self.result.text = button_text
+            else:
+                self.result.text = current + button_text
+
+if __name__ == '__main__':
+    IphoneCalculatorApp().run()
         # বাটন লেআউট (৫ সারি, ৪ কলাম)
         buttons = [
             ['C', '+/-', '%', '/'],
